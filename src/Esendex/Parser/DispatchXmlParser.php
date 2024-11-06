@@ -103,4 +103,22 @@ class DispatchXmlParser
 
         return $results;
     }
+
+    public function parseWithBatchid($xml)
+    {
+        $headers = simplexml_load_string($xml);
+        if ($headers->getName() != "messageheaders")
+            throw new XmlException("Xml is missing <messageheaders /> root element");
+
+        $results = array();
+        
+        foreach ($headers->messageheader as $header)
+        {
+            $results[] = new ResultItem($header["id"], $header["uri"]);
+        }
+
+        $results['batchid'] = (string)$headers->attributes()['batchid']; 
+
+        return $results;
+    }
 }
