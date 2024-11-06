@@ -94,6 +94,37 @@ class DispatchService
         }
     }
 
+     /**
+     * @param Model\DispatchMessage $message
+     * @return Array Model\ResultItem
+     * @throws Exceptions\EsendexException
+     */
+    public function sendToManyUsers(Model\DispatchMessage $message)
+    {
+        $xml = $this->parser->encode($message);
+        $uri = Http\UriBuilder::serviceUri(
+            self::DISPATCH_SERVICE_VERSION,
+            self::DISPATCH_SERVICE,
+            null,
+            $this->httpClient->isSecure()
+        );
+
+        $result = $this->httpClient->post(
+            $uri,
+            $this->authentication,
+            $xml
+        );
+
+        $arr = $this->parser->parse($result);
+
+        if (count($arr) >= 1) {
+            return $arr;
+        } else {
+            throw new Exceptions\EsendexException("Error parsing the dispatch result", null, array('data_returned' => $result));
+        }
+    }
+    
+
     /**
      * Get the number of remaining credits for your account
      *
