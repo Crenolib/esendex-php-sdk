@@ -34,6 +34,9 @@
  */
 namespace Esendex;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
+
 class DispatchService
 {
     const DISPATCH_SERVICE = "messagedispatcher";
@@ -94,12 +97,12 @@ class DispatchService
         }
     }
 
-     /**
+      /**
      * @param Model\DispatchMessage $message
      * @return Array Model\ResultItem
      * @throws Exceptions\EsendexException
      */
-    public function sendToManyUsers(Model\DispatchMessage $message)
+    public function sendToManyUsers(Model\DispatchMessage $message, $username, $password)
     {
         $xml = $this->parser->encode($message);
         $uri = Http\UriBuilder::serviceUri(
@@ -115,7 +118,7 @@ class DispatchService
             $xml
         );
 
-        $arr = $this->parser->parse($result);
+        $arr = $this->parser->parseWithBatchid($result);
 
         if (count($arr) >= 1) {
             return $arr;
@@ -123,6 +126,20 @@ class DispatchService
             throw new Exceptions\EsendexException("Error parsing the dispatch result", null, array('data_returned' => $result));
         }
     }
+
+
+    public function getMessageBatches(String $batchId, $userName, $password)
+    {
+        $httpClient = new Client();
+        $response = $httpClient->get(
+            'https://api.esendex.com/v1.0/messagebatches/'.$batchId.'/messages',
+            [
+                RequestOptions::AUTH => [$userName, $password]
+            ]
+        );
+
+        return $response->getBody()->getContents(); 
+    }   
     
 
     /**
